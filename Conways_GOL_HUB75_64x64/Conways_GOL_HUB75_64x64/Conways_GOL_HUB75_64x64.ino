@@ -1,9 +1,11 @@
 #include <Wire.h>                 // For I2C communication
 #include <Adafruit_Protomatter.h> // For RGB matrix
 
-int cellCount = 0;
+uint32_t cellCount, steadyCheck1, steadyCheck2, steadyGenAlive, steadyGenDead = 0;
+uint32_t x, y;
 #define HEIGHT  64 // Matrix height (pixels) - SET TO 64 FOR 64x64 MATRIX!
 #define WIDTH   64 // Matrix width (pixels)
+#define MAX_FPS 45 // Maximum redraw rate, frames/second
 
 unsigned char masterCell[WIDTH][HEIGHT] =
 {
@@ -45,12 +47,39 @@ unsigned char newCell[WIDTH][HEIGHT] =
   {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 };
 
+#if defined(_VARIANT_MATRIXPORTAL_M4_) // MatrixPortal M4
+uint8_t rgbPins[]  = {7, 8, 9, 10, 11, 12};
+uint8_t addrPins[] = {17, 18, 19, 20, 21};
+uint8_t clockPin   = 14;
+uint8_t latchPin   = 15;
+uint8_t oePin      = 16;
+#else // MatrixPortal ESP32-S3
+uint8_t rgbPins[]  = {42, 41, 40, 38, 39, 37};
+uint8_t addrPins[] = {45, 36, 48, 35, 21};
+uint8_t clockPin   = 2;
+uint8_t latchPin   = 47;
+uint8_t oePin      = 14;
+#endif
+
+#if HEIGHT == 16
+#define NUM_ADDR_PINS 3
+#elif HEIGHT == 32
+#define NUM_ADDR_PINS 4
+#elif HEIGHT == 64
+#define NUM_ADDR_PINS 5
+#endif
+
+Adafruit_Protomatter matrix(
+  WIDTH, 4, 1, rgbPins, NUM_ADDR_PINS, addrPins,
+  clockPin, latchPin, oePin, true);
+
+#define N_COLORS   8
+uint16_t colors[N_COLORS];
+
+uint32_t prevTime = 0; // Used for frames-per-second throttle
+
 void setup()
 {
-  // Setup some system stuff for the LED
-  lc.shutdown(0, false);
-  lc.setIntensity(0, 8);
-
   // Creates a random number seed based on electrical noise from 3 onboard ADC channels for hopefully better
   // random number generation
   randomSeed(analogRead(0) * (analogRead(1) + analogRead(2)));
@@ -62,6 +91,8 @@ void setup()
 
   ProtomatterStatus status = matrix.begin();
   Serial.printf("Protomatter begin() status: %d\n", status);
+
+  cellCount = 0;
 }
 
 void loop()

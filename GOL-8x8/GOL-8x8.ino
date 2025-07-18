@@ -63,6 +63,58 @@ unsigned char newCell[8][8] =   // Create a second 8x8 field in which changes ar
 int cellCount, steadyCheck1, steadyCheck2, steadyGenAlive, steadyGenDead = 0;
 int x, y;
 
+#define HEIGHT  32 // Matrix height (pixels) - SET TO 64 FOR 64x64 MATRIX!
+#define WIDTH   64 // Matrix width (pixels)
+#define MAX_FPS 45 // Maximum redraw rate, frames/second
+
+#if defined(_VARIANT_MATRIXPORTAL_M4_) // MatrixPortal M4
+uint8_t rgbPins[]  = {7, 8, 9, 10, 11, 12};
+uint8_t addrPins[] = {17, 18, 19, 20, 21};
+uint8_t clockPin   = 14;
+uint8_t latchPin   = 15;
+uint8_t oePin      = 16;
+#else // MatrixPortal ESP32-S3
+uint8_t rgbPins[]  = {42, 41, 40, 38, 39, 37};
+uint8_t addrPins[] = {45, 36, 48, 35, 21};
+uint8_t clockPin   = 2;
+uint8_t latchPin   = 47;
+uint8_t oePin      = 14;
+#endif
+
+#if HEIGHT == 16
+#define NUM_ADDR_PINS 3
+#elif HEIGHT == 32
+#define NUM_ADDR_PINS 4
+#elif HEIGHT == 64
+#define NUM_ADDR_PINS 5
+#endif
+
+Adafruit_Protomatter matrix(
+  WIDTH, 4, 1, rgbPins, NUM_ADDR_PINS, addrPins,
+  clockPin, latchPin, oePin, true);
+
+Adafruit_LIS3DH accel = Adafruit_LIS3DH();
+
+#define N_COLORS   8
+#define BOX_HEIGHT 8
+#define N_GRAINS (BOX_HEIGHT*N_COLORS*8)
+uint16_t colors[N_COLORS];
+
+Adafruit_PixelDust sand(WIDTH, HEIGHT, N_GRAINS, 1, 128, false);
+
+uint32_t prevTime = 0; // Used for frames-per-second throttle
+
+// SETUP - RUNS ONCE AT PROGRAM START --------------------------------------
+
+void err(int x) {
+  uint8_t i;
+  pinMode(LED_BUILTIN, OUTPUT);       // Using onboard LED
+  for(i=1;;i++) {                     // Loop forever...
+    digitalWrite(LED_BUILTIN, i & 1); // LED on/off blink to alert user
+    delay(x);
+  }
+}
+
 void setup()
 {
 
@@ -75,6 +127,15 @@ void setup()
   randomSeed(analogRead(0) * (analogRead(1) + analogRead(2)));
 
   Serial.begin(9600); // Open a serial port for debugging purposes
+
+  colors[0] = matrix.color565(64, 64, 64);  // Dark Gray
+  colors[1] = matrix.color565(120, 79, 23); // Brown
+  colors[2] = matrix.color565(228,  3,  3); // Red
+  colors[3] = matrix.color565(255,140,  0); // Orange
+  colors[4] = matrix.color565(255,237,  0); // Yellow
+  colors[5] = matrix.color565(  0,128, 38); // Green
+  colors[6] = matrix.color565(  0, 77,255); // Blue
+  colors[7] = matrix.color565(117,  7,135); // Purple
 }
 
 void loop()

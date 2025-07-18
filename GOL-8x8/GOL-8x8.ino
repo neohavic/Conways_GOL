@@ -93,14 +93,9 @@ Adafruit_Protomatter matrix(
   WIDTH, 4, 1, rgbPins, NUM_ADDR_PINS, addrPins,
   clockPin, latchPin, oePin, true);
 
-Adafruit_LIS3DH accel = Adafruit_LIS3DH();
-
 #define N_COLORS   8
 #define BOX_HEIGHT 8
-#define N_GRAINS (BOX_HEIGHT*N_COLORS*8)
 uint16_t colors[N_COLORS];
-
-Adafruit_PixelDust sand(WIDTH, HEIGHT, N_GRAINS, 1, 128, false);
 
 uint32_t prevTime = 0; // Used for frames-per-second throttle
 

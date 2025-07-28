@@ -15,8 +15,6 @@
 
    To-Do's:
    -Make modulo a function, rather than hardcoded - still planned as of V2.0
-   -Expand to 16x16 with 4 MAX7219 modules - Not as relevant as of V2.0
-   -Implement tap controls toV2.0 to change colors as the Matrix portal is supposed to have the capability
    -Add age of each cell in simulation by changing their individual cell color
 */
 
@@ -196,6 +194,7 @@ unsigned char newCell[WIDTH][HEIGHT] =
   {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 };
 
+/************************************************************************************************************************************/
 void setup()
 {
 
@@ -218,6 +217,8 @@ void setup()
   colors[8] = lc.color565(0,  0, 0);    // Black
 }
 
+/************************************************************************************************************************************/
+
 void loop()
 {
   // cycle through different colors for each generation, skipping black
@@ -228,9 +229,9 @@ void loop()
   }
 
   // Fill the playing field with random pattern
-  for (int x = 0; x < WIDTH; x++)
+  for (x = 0; x < WIDTH; x++)
   {
-    for (int y = 0; y < HEIGHT; y++)
+    for (y = 0; y < HEIGHT; y++)
     {
       masterCell[x][y] = random(0, 2);
     }
@@ -262,10 +263,8 @@ void loop()
   // Reset the generation number for steady state checks
   steadyGenDead, steadyGenAlive = 0;
 
-  for (int gens = 0; gens < 3000; gens++) // Run for 3000 generations, tops
+  for (uint8_t gens = 0; gens < 3000; gens++) // Run for 3000 generations, tops
   {
-    int x, y;
-
     // Draw the playfield to LED
     for (x = 0; x < WIDTH; x++)
     {
@@ -293,59 +292,66 @@ void loop()
         /*
            NOTE: The playfield is built as an 64x64 toroid, IE a globe flattened out. This is accomplished using modulo math. Arduino C++'s built-in mod function (%)
            only returns the REMAINDER, not the true mod. This can be proven by taking (-1 % 8), which will return -1, instead of 7 which is what is wanted for an object moving left on a
-           torroidal array. The same can be used for the Y movements This was solved by using the formula (((X % 8) + 8) % 8). I should have written a function for this instead of
-           hardcoding it into the coordinate calls, but I got lazy.
+           torroidal array. The same can be used for the Y movements This was solved by using the formula (((X % 8) + 8) % 8).
         */
-
+        
         // Check left
-        if (masterCell[((((x - 1) % WIDTH) + WIDTH) % WIDTH)][(((y % HEIGHT) + HEIGHT) % HEIGHT)] == 1)
+        //if (masterCell[((((x - 1) % WIDTH) + WIDTH) % WIDTH)][(((y % HEIGHT) + HEIGHT) % HEIGHT)] == 1)
+        if (masterCell[modFixed((x - 1))][modFixed(y)] == 1)
         {
           cellCount += 1;
         }
 
         // Check right
-        if (masterCell[((((x + 1) % WIDTH) + WIDTH) % WIDTH)][(((y % HEIGHT) + HEIGHT) % HEIGHT)] == 1)
+        //if (masterCell[((((x + 1) % WIDTH) + WIDTH) % WIDTH)][(((y % HEIGHT) + HEIGHT) % HEIGHT)] == 1)
+        if (masterCell[modFixed((x + 1))][modFixed(y)] == 1)
         {
           cellCount += 1;
         }
 
         // Check up
-        if (masterCell[(((x % WIDTH) + WIDTH) % WIDTH)][((((y - 1) % HEIGHT) + HEIGHT) % HEIGHT)] == 1)
+        //if (masterCell[(((x % WIDTH) + WIDTH) % WIDTH)][((((y - 1) % HEIGHT) + HEIGHT) % HEIGHT)] == 1)
+        if (masterCell[modFixed(x)][modFixed((y - 1))] == 1)
         {
           cellCount += 1;
         }
 
         // Check down
-        if (masterCell[(((x % WIDTH) + WIDTH) % WIDTH)][((((y + 1) % HEIGHT) + HEIGHT) % HEIGHT)] == 1)
+        //if (masterCell[(((x % WIDTH) + WIDTH) % WIDTH)][((((y + 1) % HEIGHT) + HEIGHT) % HEIGHT)] == 1)
+        if (masterCell[modFixed(x)][modFixed((y + 1))] == 1)
         {
           cellCount += 1;
         }
 
         // Check up/left
-        if (masterCell[((((x - 1) % WIDTH) + WIDTH) % WIDTH)][((((y - 1) % HEIGHT) + HEIGHT) % HEIGHT)] == 1)
+        //if (masterCell[((((x - 1) % WIDTH) + WIDTH) % WIDTH)][((((y - 1) % HEIGHT) + HEIGHT) % HEIGHT)] == 1)
+        if (masterCell[modFixed((x - 1))][modFixed((y - 1))] == 1)
         {
           cellCount += 1;
         }
 
         // Check up/right
-
-        if (masterCell[((((x + 1) % WIDTH) + WIDTH) % WIDTH)][((((y - 1) % HEIGHT) + HEIGHT) % HEIGHT)] == 1)
+        //if (masterCell[((((x + 1) % WIDTH) + WIDTH) % WIDTH)][((((y - 1) % HEIGHT) + HEIGHT) % HEIGHT)] == 1)
+        if (masterCell[modFixed((x + 1))][modFixed((y - 1))] == 1)
         {
           cellCount += 1;
         }
 
         // Check down/left
-        if (masterCell[((((x - 1) % WIDTH) + WIDTH) % WIDTH)][((((y + 1) % HEIGHT) + HEIGHT) % HEIGHT)] == 1)
+        //if (masterCell[((((x - 1) % WIDTH) + WIDTH) % WIDTH)][((((y + 1) % HEIGHT) + HEIGHT) % HEIGHT)] == 1)
+        if (masterCell[modFixed((x - 1))][modFixed((y + 1))] == 1)
         {
           cellCount += 1;
         }
 
         // Check down/right
-        if (masterCell[((((x + 1) % WIDTH) + WIDTH) % WIDTH)][((((y + 1) % HEIGHT) + HEIGHT) % HEIGHT)] == 1)
+        //if (masterCell[((((x + 1) % WIDTH) + WIDTH) % WIDTH)][((((y + 1) % HEIGHT) + HEIGHT) % HEIGHT)] == 1)
+        if (masterCell[modFixed((x + 1))][modFixed((y + 1))] == 1)
         {
           cellCount += 1;
         }
 
+/************************************************************************************************************************************/
         // Check conditions for cell life or death
         if ((masterCell[x][y] == 1) && (cellCount < 2))
         {
@@ -368,6 +374,9 @@ void loop()
         }
       }
     }
+
+/************************************************************************************************************************************/
+
 
     // Count the number of alive cells in masterCell and newCell for a steady state check.
     // If they have the same number alive, probably a steady state (or its an interesting pattern!), or if its empty
@@ -449,4 +458,12 @@ void loop()
     delay(250); // Keep the simulation from running overly fast, can adjust to your preference
 
   }
+}
+
+/************************************************************************************************************************************/
+
+// Fixed mod function
+uint8_t modFixed(uint8_t in)
+{
+  return (((in % 64) + 64) % 64);
 }

@@ -3,19 +3,23 @@
    Austin Everman
 
   Version History:
-    1.0, 01/13/2017: First stable state with all features originally intended.
+    v1.0, 01/13/2017: First stable state with all features originally intended.
     A simple 8x8 toroidal implementation of GOL on an Arduino Uno (or Adafruit Pro Trinkit 5V), using an absolutely GRATUITIS number of FOR loops LOL
    (The reason for this is to understand the logic of the GAME, not for code elegance). The Arduino is running an 8x8 LED matrix driven by a serial SPI run MAX7219 LED driver
    using the LedControl library, which gives much easier control of both individual pixels with less serial coding involved (like, a LOT less!). The library still allows for
    the daisy-chaining of multiple MAX7219's and individually addressing them while retaining single pixel control.
     
-    2.0, 7/20/2025: First stable version using an AliExpress clone of an Adafruit Matrix Portal S3 and a 64x64 HUB75 LED matrix. The simulation runs for 300 generations, still on
+    v2.0, 7/20/2025: First stable version using an AliExpress clone of an Adafruit Matrix Portal S3 and a 64x64 HUB75 LED matrix. The simulation runs for 300 generations, still on
     a toroidal playfield as I used the original codebase, but as this was an RGB panel, now everytime the simulation resets, the color changes. The plan is to mount it in
     a shadow box and make a wall or desk ornament out of it.
 
+   v2.5, 8/15/25: Added a proper modulo function, needs testing still. It *should* work, and I could test it with the mod.ino project, I just got sidetracked
+   Began to add a TRUE random color picker for each new generation when the new playfield is being spawned in, needs to be finished.
+
    To-Do's:
-   -Make modulo a function, rather than hardcoded - still planned as of V2.0
+   -Make modulo a function, rather than hardcoded - still planned as of V2.0 - DONE
    -Add age of each cell in simulation by changing their individual cell color
+   -Add true random color for new population on world spawn - IN PROGRESS
 */
 
 #include <Wire.h>                 // For I2C communication
@@ -221,6 +225,10 @@ void setup()
 
 void loop()
 {
+  // Reseed the random number generator since we are now creating a new pattern AND choosing random colors
+  randomSeed(analogRead(0) * (analogRead(1) + analogRead(2)));
+  lc.color565(64, 64, 64);
+
   // cycle through different colors for each generation, skipping black
   c++;
   if (c > 7)
